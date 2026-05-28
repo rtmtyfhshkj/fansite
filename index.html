@@ -3,31 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>柳谷伊冴 ファンサイト ✨</title>
+  <title>柳谷伊冴 ファンサイト</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 </head>
 <body>
 
+  <!-- 泡のアニメーション -->
+  <script>
+    for (let i = 0; i < 9; i++) {
+      const b = document.createElement('div');
+      b.className = 'bubble';
+      const size = 18 + Math.random() * 70;
+      b.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;animation-duration:${14+Math.random()*18}s;animation-delay:${Math.random()*14}s;`;
+      document.body.appendChild(b);
+    }
+  </script>
+
   <!-- ヘッダー -->
   <header class="site-header">
-    <div class="header-inner">
-      <div class="header-deco deco-star">★</div>
-      <div class="header-deco deco-heart">♥</div>
-      <div class="header-deco deco-note">♪</div>
-      <h1 class="site-title">柳谷伊冴<span class="title-sub">ファンサイト</span></h1>
-      <p class="site-desc">推しの魅力をみんなでシェアしよう！</p>
-    </div>
+    <p class="hero-sub">ISSA Fan Community</p>
+    <h1 class="site-title">柳谷伊冴<span class="title-sub">ファンサイト</span></h1>
+    <p class="site-desc">推しの魅力をみんなでシェアしよう</p>
+    <div class="hero-divider"></div>
   </header>
 
   <main class="container">
 
     <!-- 投稿フォーム -->
-    <section class="post-section card">
-      <h2 class="section-title">
-        <span class="icon">📌</span> リンクを投稿する
-      </h2>
+    <section class="card post-section">
+      <h2 class="section-title">リンクを投稿する</h2>
       <form id="postForm">
         <div class="form-row">
           <label>YouTube / Instagram URL <span class="required">必須</span></label>
@@ -51,16 +57,14 @@
             <input type="password" id="postSecret" placeholder="合言葉を入力" required>
           </div>
         </div>
-        <button type="submit" class="btn btn-primary">投稿する ✨</button>
+        <button type="submit" class="btn btn-primary">投稿する</button>
         <p class="form-msg" id="postMsg"></p>
       </form>
     </section>
 
     <!-- 投稿一覧 -->
     <section class="board-section">
-      <h2 class="section-title">
-        <span class="icon">🎬</span> みんなの投稿
-      </h2>
+      <h2 class="section-title">みんなの投稿</h2>
       <div id="postsContainer" class="posts-grid">
         <div class="loading">読み込み中...</div>
       </div>
@@ -79,7 +83,7 @@
         <div class="comment-form-row">
           <input type="text" id="commentAuthor" placeholder="名前" required>
           <input type="password" id="commentSecret" placeholder="合言葉" required>
-          <button type="submit" class="btn btn-accent">送信</button>
+          <button type="submit" class="btn btn-primary">送信</button>
         </div>
         <p class="form-msg" id="commentMsg"></p>
       </form>
@@ -87,7 +91,7 @@
   </div>
 
   <footer class="site-footer">
-    <p>💛 柳谷伊冴くんへの愛をここに 💛</p>
+    <p>🩵 柳谷伊冴くんへの愛をここに 🩵</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
