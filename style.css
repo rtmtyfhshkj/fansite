@@ -4,10 +4,10 @@
   --sky-deep: #3aade0;
   --sky-deeper: #1a8bc4;
   --sky-mist: #f0faff;
-  --yellow: #ffd600;
-  --yellow-dark: #f0a800;
-  --pink: #ff6eb4;
-  --green: #00d4aa;
+  --accent: #ff6eb4;
+  --accent-dark: #e84fa0;
+  --accent-light: #ffb3d9;
+  --mint: #5de8d0;
   --text: #1a3a4a;
   --text-soft: #4a7a94;
   --card-bg: rgba(255,255,255,0.88);
@@ -30,9 +30,9 @@ body::before {
   inset: 0;
   background:
     radial-gradient(ellipse 80% 60% at 15% 10%, rgba(126,206,244,0.45) 0%, transparent 65%),
-    radial-gradient(ellipse 60% 80% at 85% 90%, rgba(0,212,170,0.18) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255,214,0,0.08) 0%, transparent 70%),
-    linear-gradient(170deg, #e0f5ff 0%, #f0faff 50%, #d8f7ee 100%);
+    radial-gradient(ellipse 60% 80% at 85% 90%, rgba(93,232,208,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255,110,180,0.07) 0%, transparent 70%),
+    linear-gradient(170deg, #e0f5ff 0%, #f0faff 50%, #ddfaf5 100%);
   z-index: -2;
 }
 
@@ -62,65 +62,41 @@ body::before {
 /* ===== ヘッダー ===== */
 .site-header {
   text-align: center;
-  padding: 48px 24px 32px;
+  padding: 52px 24px 34px;
   animation: fadeSlideIn 0.6s ease both;
-}
-
-.header-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--yellow);
-  color: #1a1a1a;
-  font-family: 'Outfit', sans-serif;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  padding: 5px 14px;
-  border-radius: 50px;
-  margin-bottom: 16px;
-}
-
-.header-dot {
-  width: 6px; height: 6px;
-  background: #1a1a1a;
-  border-radius: 50%;
-  display: inline-block;
 }
 
 .site-title-wrap {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: center;
-  gap: 14px;
-  flex-wrap: wrap;
 }
 
 .site-title {
   font-family: 'Anton', sans-serif;
-  font-size: clamp(42px, 10vw, 72px);
+  font-size: clamp(36px, 9vw, 64px);
   font-weight: 400;
   color: var(--sky-deeper);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   line-height: 1;
-  text-shadow: 3px 3px 0 rgba(58,173,224,0.18);
+  text-shadow: 2px 2px 0 rgba(58,173,224,0.15), 0 0 40px rgba(126,206,244,0.3);
 }
 
-.site-title-en {
+.site-subtitle {
   font-family: 'Outfit', sans-serif;
-  font-size: clamp(13px, 3vw, 18px);
+  font-size: clamp(12px, 3vw, 17px);
   font-weight: 800;
-  color: var(--yellow-dark);
-  letter-spacing: 0.18em;
+  color: var(--accent);
+  letter-spacing: 0.22em;
   text-transform: uppercase;
+  margin-top: 6px;
 }
 
 .hero-divider {
-  width: 80px;
+  width: 72px;
   height: 3px;
-  background: linear-gradient(90deg, transparent, var(--yellow), transparent);
-  margin: 18px auto 0;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  margin: 16px auto 0;
   border-radius: 2px;
 }
 
@@ -164,10 +140,10 @@ body::before {
 }
 
 .ctab.active {
-  background: var(--yellow);
-  color: #1a1a1a;
-  border-color: var(--yellow);
-  box-shadow: 0 4px 16px rgba(255,214,0,0.4);
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 4px 16px rgba(255,110,180,0.35);
   transform: translateY(-2px);
 }
 
@@ -200,7 +176,7 @@ body::before {
 
 .section-dot {
   width: 8px; height: 8px;
-  background: var(--yellow);
+  background: var(--accent);
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -454,27 +430,21 @@ body::before {
 
 /* ===== フッター ===== */
 .site-footer {
-  text-align: center;
-  padding: 2rem;
-  color: var(--text-soft);
-  font-size: 13px;
-  font-weight: 300;
+  text-align: right;
+  padding: 1rem 24px 1.5rem;
   position: relative;
 }
 
 .admin-toggle {
-  position: absolute;
-  right: 20px;
-  bottom: 18px;
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
-  opacity: 0.3;
+  opacity: 0.25;
   transition: opacity 0.2s;
   padding: 4px;
 }
-.admin-toggle:hover { opacity: 0.75; }
+.admin-toggle:hover { opacity: 0.7; }
 
 /* ===== 管理者ロック画面 ===== */
 .admin-prompt {
