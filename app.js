@@ -111,7 +111,7 @@ function buildFeatureCard(post) {
           <span class="feature-platform-tag tag-${post.platform}">${platformLabel(post.platform)}</span>
           <span class="feature-category-tag">${categoryLabel(post.category)}</span>
         </div>
-        <div class="feature-label">推しカメラ</div>
+        <div class="feature-label">${escHtml(post.title || categoryLabel(post.category))}</div>
         ${deleteBtn}
       </div>
     </div>
@@ -135,6 +135,7 @@ function buildPostCard(post) {
       <span>${platformLabel(post.platform)}</span>
       <span class="badge-category">${categoryLabel(post.category)}</span>
     </div>
+    ${post.title ? `<div class="post-title">${escHtml(post.title)}</div>` : ''}
     ${buildEmbed(post)}
     <div style="padding:2px 0 4px;">${deleteBtn}</div>
   `;
@@ -313,6 +314,7 @@ document.getElementById('adminForm').addEventListener('submit', async e => {
   const btn = e.target.querySelector('button[type=submit]');
 
   const url      = document.getElementById('adminUrl').value.trim();
+  const title    = document.getElementById('adminTitle').value.trim();
   const platform = document.getElementById('adminPlatform').value;
   const category = document.getElementById('adminCategory').value;
 
@@ -320,7 +322,7 @@ document.getElementById('adminForm').addEventListener('submit', async e => {
   msg.className = 'form-msg';
   msg.textContent = '投稿中...';
 
-  const { error } = await db.from('posts').insert({ url, platform, category });
+  const { error } = await db.from('posts').insert({ url, title, platform, category });
   if (error) {
     msg.className = 'form-msg error';
     msg.textContent = '投稿に失敗しました';
@@ -329,6 +331,7 @@ document.getElementById('adminForm').addEventListener('submit', async e => {
     msg.className = 'form-msg success';
     msg.textContent = '投稿しました！';
     document.getElementById('adminUrl').value = '';
+    document.getElementById('adminTitle').value = '';
     await loadPosts();
     setTimeout(() => { msg.textContent = ''; }, 3000);
   }

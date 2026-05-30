@@ -71,96 +71,75 @@ body::before {
 
 /* ===== 冬の大三角形 ===== */
 
-/* ベテルギウス (オリオン座・赤色超巨星) */
+/* BETELGISSA (クリックで管理者ページ) */
 .betelgeuse {
   position: fixed;
-  top: 15%;
-  right: 10%;
-  width: 11px; height: 11px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #ffe8b0 0%, #ff9040 40%, #c03000 100%);
-  box-shadow:
-    0 0 8px  5px rgba(255,130,40,0.55),
-    0 0 28px 12px rgba(200,60,0,0.25),
-    0 0 60px 20px rgba(180,40,0,0.1);
-  animation: betelgeuseGlow 5s ease-in-out infinite alternate;
-  z-index: 0;
-}
-.betelgeuse::after {
-  content: 'Betelgeuse';
-  position: absolute;
-  right: 17px; top: 50%;
-  transform: translateY(-50%);
-  font-family: 'Outfit', sans-serif;
-  font-size: 9px; font-weight: 800;
-  letter-spacing: 0.14em;
-  color: rgba(255,180,80,0.65);
-  white-space: nowrap; text-transform: uppercase;
-}
-@keyframes betelgeuseGlow {
-  0%   { opacity: 0.7; transform: scale(1); }
-  100% { opacity: 1;   transform: scale(1.6); }
-}
-
-/* シリウス (おおいぬ座・全天で最も明るい星・青白色) */
-.sirius {
-  position: fixed;
-  top: 62%;
-  right: 20%;
-  width: 15px; height: 15px;
+  top: 15%; right: 10%;
+  width: 13px; height: 13px;
   border-radius: 50%;
   background: radial-gradient(circle, #ffffff 0%, #cce8ff 40%, #4080ff 100%);
   box-shadow:
-    0 0 10px  7px rgba(180,210,255,0.6),
+    0 0 10px 7px rgba(180,210,255,0.6),
     0 0 35px 15px rgba(100,160,255,0.3),
     0 0 70px 25px rgba(80,120,255,0.12);
-  animation: siriusGlow 4s ease-in-out infinite alternate;
-  z-index: 0;
+  animation: betelgeuseGlow 4s ease-in-out infinite alternate;
+  cursor: pointer;
+  z-index: 2;
 }
-.sirius::after {
-  content: 'Sirius';
+.betelgeuse::after {
+  content: 'BETELGISSA';
   position: absolute;
   right: 20px; top: 50%;
   transform: translateY(-50%);
   font-family: 'Outfit', sans-serif;
   font-size: 9px; font-weight: 800;
   letter-spacing: 0.14em;
-  color: rgba(160,210,255,0.65);
+  color: rgba(160,210,255,0.7);
   white-space: nowrap; text-transform: uppercase;
+  pointer-events: none;
 }
-@keyframes siriusGlow {
+@keyframes betelgeuseGlow {
   0%   { opacity: 0.8; transform: scale(1); }
   100% { opacity: 1;   transform: scale(1.5); }
 }
 
-/* プロキオン (こいぬ座・黄白色) */
-.procyon {
+/* シリウス (最大・青白) */
+.sirius {
   position: fixed;
-  top: 20%;
-  right: 38%;
-  width: 9px; height: 9px;
+  top: 62%; right: 20%;
+  width: 20px; height: 20px;
   border-radius: 50%;
-  background: radial-gradient(circle, #fffff0 0%, #ffe8a0 50%, #c8aa30 100%);
+  background: radial-gradient(circle, #ffffff 0%, #e8f4ff 40%, #6090ff 100%);
   box-shadow:
-    0 0 7px  4px rgba(255,240,160,0.5),
-    0 0 20px 8px  rgba(220,190,80,0.2);
-  animation: procyonGlow 6s ease-in-out infinite alternate;
+    0 0 14px 9px rgba(200,225,255,0.65),
+    0 0 45px 20px rgba(120,170,255,0.3),
+    0 0 90px 35px rgba(80,120,255,0.12);
+  animation: siriusGlow 4s ease-in-out infinite alternate;
+  pointer-events: none;
   z-index: 0;
 }
-.procyon::after {
-  content: 'Procyon';
-  position: absolute;
-  right: 15px; top: 50%;
-  transform: translateY(-50%);
-  font-family: 'Outfit', sans-serif;
-  font-size: 9px; font-weight: 800;
-  letter-spacing: 0.14em;
-  color: rgba(255,230,120,0.6);
-  white-space: nowrap; text-transform: uppercase;
+@keyframes siriusGlow {
+  0%   { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 1;   transform: scale(1.6); }
+}
+
+/* プロキオン (中サイズ・白) */
+.procyon {
+  position: fixed;
+  top: 20%; right: 38%;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0%, #f0f0f0 50%, #c0c0d0 100%);
+  box-shadow:
+    0 0 10px 6px rgba(220,230,255,0.55),
+    0 0 30px 12px rgba(180,200,255,0.2);
+  animation: procyonGlow 6s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
 }
 @keyframes procyonGlow {
   0%   { opacity: 0.65; transform: scale(0.9); }
-  100% { opacity: 1;    transform: scale(1.3); }
+  100% { opacity: 1;    transform: scale(1.5); }
 }
 
 /* 三角形を結ぶ線 */
@@ -247,9 +226,9 @@ body::before {
 .ctab {
   padding: 8px 18px;
   border-radius: 50px;
-  border: 1.5px solid rgba(79,216,255,0.25);
+  border: 1.5px solid rgba(255,220,100,0.22);
   background: rgba(10,25,65,0.6);
-  color: var(--text-soft);
+  color: rgba(240,210,80,0.6);
   font-family: 'Noto Sans JP', sans-serif;
   font-size: 12.5px;
   font-weight: 700;
@@ -260,9 +239,9 @@ body::before {
 }
 
 .ctab:hover {
-  background: rgba(79,216,255,0.12);
-  color: var(--accent);
-  border-color: var(--accent-dim);
+  background: rgba(255,220,100,0.1);
+  color: rgba(255,229,102,0.9);
+  border-color: rgba(255,220,100,0.5);
   transform: translateY(-2px);
 }
 
@@ -307,6 +286,16 @@ body::before {
   border-radius: 50%;
   flex-shrink: 0;
   box-shadow: 0 0 6px var(--accent);
+}
+
+/* ===== 投稿タイトル ===== */
+.post-title {
+  padding: 6px 12px 2px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.02em;
+  line-height: 1.4;
 }
 
 /* ===== ローディング / 空 ===== */

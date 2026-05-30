@@ -36,7 +36,7 @@
 
   <!-- 冬の大三角形 -->
   <!-- ベテルギウス: 右上, プロキオン: 中央やや右上, シリウス: 下中央右 -->
-  <div class="betelgeuse"></div>
+  <div class="betelgeuse" onclick="toggleAdminPrompt()"></div>
   <div class="procyon"></div>
   <div class="sirius"></div>
   <!-- 三角形の結線 (very faint) -->
@@ -101,6 +101,10 @@
         <div class="admin-form-row">
           <label>URL</label>
           <input type="url" id="adminUrl" placeholder="https://..." required>
+        </div>
+        <div class="admin-form-row">
+          <label>タイトル</label>
+          <input type="text" id="adminTitle" placeholder="動画タイトルなど" required>
         </div>
         <div class="admin-form-row-split">
           <div class="admin-form-row">
