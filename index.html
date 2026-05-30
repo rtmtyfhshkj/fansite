@@ -11,12 +11,12 @@
 <body>
 
   <script>
-    for (let i = 0; i < 9; i++) {
-      const b = document.createElement('div');
-      b.className = 'bubble';
-      const size = 18 + Math.random() * 70;
-      b.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;animation-duration:${14+Math.random()*18}s;animation-delay:${Math.random()*14}s;`;
-      document.body.appendChild(b);
+    for (let i = 0; i < 24; i++) {
+      const s = document.createElement('div');
+      s.className = 'sparkle';
+      const size = 3 + Math.random() * 7;
+      s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*98}%;top:${Math.random()*98}%;animation-duration:${1.8+Math.random()*4}s;animation-delay:${Math.random()*7}s;`;
+      document.body.appendChild(s);
     }
   </script>
 

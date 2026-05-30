@@ -53,7 +53,7 @@ function buildEmbed(post) {
   if (post.platform === 'youtube') {
     const id = getYoutubeId(url);
     if (id) {
-      return `<div class="embed-wrap"><iframe src="https://www.youtube.com/embed/${id}" height="200" allowfullscreen loading="lazy"></iframe></div>`;
+      return `<div class="embed-wrap"><iframe src="https://www.youtube.com/embed/${id}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>`;
     }
   }
 
