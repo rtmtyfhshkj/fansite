@@ -61,10 +61,10 @@ function buildEmbed(post) {
   if (post.platform === 'youtube') {
     const id = getYoutubeId(url);
     if (id) {
-      return `<div class="embed-wrap yt-thumb-wrap" onclick="loadYouTube(this,'${id}')">
+      return `<a class="embed-wrap yt-thumb-wrap" href="${escHtml(url)}" target="_blank" rel="noopener noreferrer">
         <img class="yt-thumb" src="https://img.youtube.com/vi/${id}/maxresdefault.jpg" onerror="this.src='https://img.youtube.com/vi/${id}/hqdefault.jpg'" alt="">
         <div class="yt-play-btn">▶</div>
-      </div>`;
+      </a>`;
     }
   }
 
@@ -455,14 +455,6 @@ document.getElementById('adminUrl').addEventListener('blur', async function() {
     if (t) titleField.value = t;
   }
 });
-
-// ===== YouTube サムネ → iframe 切り替え =====
-
-function loadYouTube(wrap, id) {
-  wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;aspect-ratio:16/9;border:none;border-radius:10px;display:block;"></iframe>`;
-  wrap.classList.remove('yt-thumb-wrap');
-  wrap.onclick = null;
-}
 
 // ===== 初期化 =====
 loadPosts();
