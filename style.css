@@ -74,7 +74,7 @@ body::before {
 /* BETELGISSA (クリックで管理者ページ) */
 .betelgeuse {
   position: fixed;
-  top: 15%; right: 10%;
+  top: 3%; right: 4%;
   width: 13px; height: 13px;
   border-radius: 50%;
   background: radial-gradient(circle, #ffffff 0%, #cce8ff 40%, #4080ff 100%);
@@ -422,11 +422,12 @@ body::before {
   justify-content: center;
   padding-left: 4px;
   pointer-events: none;
-  transition: background 0.2s, transform 0.2s;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
 }
 .yt-thumb-wrap:hover .yt-play-btn {
-  background: rgba(160,0,0,0.88);
-  transform: translate(-50%, -50%) scale(1.12);
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.08);
 }
 .embed-wrap .twitter-tweet,
 .embed-wrap .instagram-media,

@@ -59,7 +59,7 @@ function buildEmbed(post) {
     const id = getYoutubeId(url);
     if (id) {
       return `<div class="embed-wrap yt-thumb-wrap" onclick="loadYouTube(this,'${id}')">
-        <img class="yt-thumb" src="https://img.youtube.com/vi/${id}/hqdefault.jpg" alt="">
+        <img class="yt-thumb" src="https://img.youtube.com/vi/${id}/maxresdefault.jpg" onerror="this.src='https://img.youtube.com/vi/${id}/hqdefault.jpg'" alt="">
         <div class="yt-play-btn">▶</div>
       </div>`;
     }
@@ -316,13 +316,17 @@ document.getElementById('adminForm').addEventListener('submit', async e => {
   const btn = e.target.querySelector('button[type=submit]');
 
   const url      = document.getElementById('adminUrl').value.trim();
-  const title    = document.getElementById('adminTitle').value.trim();
+  let   title    = document.getElementById('adminTitle').value.trim();
   const platform = document.getElementById('adminPlatform').value;
   const category = document.getElementById('adminCategory').value;
 
   btn.disabled = true;
   msg.className = 'form-msg';
   msg.textContent = 'Posting...';
+
+  if (!title && platform === 'youtube') {
+    title = await fetchYouTubeTitle(url);
+  }
 
   const { error } = await db.from('posts').insert({ url, title, platform, category });
   if (error) {
@@ -348,6 +352,26 @@ async function deletePost(id) {
   if (!error) await loadPosts();
   else alert('Failed to delete');
 }
+
+// ===== YouTube タイトル自動取得 =====
+
+async function fetchYouTubeTitle(url) {
+  try {
+    const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+    if (res.ok) { const d = await res.json(); return d.title || ''; }
+  } catch (e) {}
+  return '';
+}
+
+document.getElementById('adminUrl').addEventListener('blur', async function() {
+  const url = this.value.trim();
+  const titleField = document.getElementById('adminTitle');
+  if (!url || titleField.value.trim()) return;
+  if (getYoutubeId(url)) {
+    const t = await fetchYouTubeTitle(url);
+    if (t) titleField.value = t;
+  }
+});
 
 // ===== YouTube サムネ → iframe 切り替え =====
 
