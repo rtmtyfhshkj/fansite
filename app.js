@@ -13,7 +13,12 @@ function escHtml(str) {
 }
 
 function categoryLabel(cat) {
-  const map = { performance: 'パフォーマンス', oshi_camera: '推しカメラ', behind: 'ビハインド', group: 'グループ', individual: '個人' };
+  const map = {
+    focus_cam: 'Focus Cam', performance: 'Performance', group: 'Group',
+    solo: 'Solo', behind: 'Behind', photo: 'Photo', others: 'Others',
+    // legacy
+    oshi_camera: 'Focus Cam', individual: 'Solo'
+  };
   return map[cat] || cat;
 }
 
@@ -100,7 +105,7 @@ function buildFeatureCard(post) {
   div.dataset.id = post.id;
 
   const deleteBtn = isAdmin
-    ? `<div class="feature-delete"><button class="btn-delete-post" onclick="deletePost(${post.id})">削除</button></div>`
+    ? `<div class="feature-delete"><button class="btn-delete-post" onclick="deletePost(${post.id})">Delete</button></div>`
     : '';
 
   div.innerHTML = `
@@ -127,7 +132,7 @@ function buildPostCard(post) {
   div.dataset.id = post.id;
 
   const deleteBtn = isAdmin
-    ? `<button class="btn-delete-post" onclick="deletePost(${post.id})">削除</button>`
+    ? `<button class="btn-delete-post" onclick="deletePost(${post.id})">Delete</button>`
     : '';
 
   div.innerHTML = `
@@ -135,8 +140,8 @@ function buildPostCard(post) {
       <span>${platformLabel(post.platform)}</span>
       <span class="badge-category">${categoryLabel(post.category)}</span>
     </div>
-    ${post.title ? `<div class="post-title">${escHtml(post.title)}</div>` : ''}
     ${buildEmbed(post)}
+    ${post.title ? `<div class="post-title">${escHtml(post.title)}</div>` : ''}
     <div style="padding:2px 0 4px;">${deleteBtn}</div>
   `;
   return div;
@@ -196,7 +201,7 @@ function buildSectionHeader(cat) {
 
 async function loadPosts() {
   const container = document.getElementById('postsContainer');
-  container.innerHTML = '<div class="loading">読み込み中...</div>';
+  container.innerHTML = '<div class="loading">Loading...</div>';
 
   let query = db.from('posts').select('*').order('created_at', { ascending: false });
   if (currentCategory !== 'all') {
@@ -214,7 +219,7 @@ async function loadPosts() {
   container.innerHTML = '';
 
   if (!posts || posts.length === 0) {
-    container.innerHTML = '<div class="empty-msg">投稿がありません</div>';
+    container.innerHTML = '<div class="empty-msg">No posts yet</div>';
     return;
   }
 
@@ -224,7 +229,7 @@ async function loadPosts() {
 
   if (currentCategory === 'all') {
     // カテゴリ順に表示
-    const categoryOrder = ['oshi_camera', 'performance', 'behind', 'group', 'individual'];
+    const categoryOrder = ['focus_cam', 'performance', 'group', 'solo', 'behind', 'photo', 'others', 'oshi_camera', 'individual'];
     const grouped = {};
     posts.forEach(p => {
       if (!grouped[p.category]) grouped[p.category] = [];
@@ -236,17 +241,11 @@ async function loadPosts() {
 
       container.appendChild(buildSectionHeader(cat));
 
-      if (cat === 'oshi_camera') {
-        grouped[cat].forEach(p => container.appendChild(buildFeatureCard(p)));
-      } else {
-        const grid = document.createElement('div');
-        grid.className = 'posts-grid';
-        grouped[cat].forEach(p => grid.appendChild(buildPostCard(p)));
-        container.appendChild(grid);
-      }
+      const grid = document.createElement('div');
+      grid.className = 'posts-grid';
+      grouped[cat].forEach(p => grid.appendChild(buildPostCard(p)));
+      container.appendChild(grid);
     });
-  } else if (currentCategory === 'oshi_camera') {
-    posts.forEach(p => container.appendChild(buildFeatureCard(p)));
   } else {
     const grid = document.createElement('div');
     grid.className = 'posts-grid';
@@ -293,7 +292,7 @@ function submitAdminSecret() {
     document.getElementById('adminPanel').classList.remove('hidden');
     loadPosts();
   } else {
-    document.getElementById('adminPromptMsg').textContent = '合言葉が違います';
+    document.getElementById('adminPromptMsg').textContent = 'Incorrect password';
   }
 }
 
@@ -320,7 +319,7 @@ document.getElementById('adminForm').addEventListener('submit', async e => {
 
   btn.disabled = true;
   msg.className = 'form-msg';
-  msg.textContent = '投稿中...';
+  msg.textContent = 'Posting...';
 
   const { error } = await db.from('posts').insert({ url, title, platform, category });
   if (error) {
@@ -329,7 +328,7 @@ document.getElementById('adminForm').addEventListener('submit', async e => {
     console.error(error);
   } else {
     msg.className = 'form-msg success';
-    msg.textContent = '投稿しました！';
+    msg.textContent = 'Posted!';
     document.getElementById('adminUrl').value = '';
     document.getElementById('adminTitle').value = '';
     await loadPosts();
@@ -341,10 +340,10 @@ document.getElementById('adminForm').addEventListener('submit', async e => {
 // ===== 削除（管理者） =====
 
 async function deletePost(id) {
-  if (!confirm('この投稿を削除しますか？')) return;
+  if (!confirm('Delete this post?')) return;
   const { error } = await db.from('posts').delete().eq('id', id);
   if (!error) await loadPosts();
-  else alert('削除に失敗しました');
+  else alert('Failed to delete');
 }
 
 // ===== 初期化 =====

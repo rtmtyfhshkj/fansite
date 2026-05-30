@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +11,6 @@
 <body>
 
   <script>
-    // 星を散りばめる
     for (let i = 0; i < 120; i++) {
       const s = document.createElement('div');
       s.className = 'sparkle';
@@ -19,8 +18,6 @@
       s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-duration:${2+Math.random()*5}s;animation-delay:${Math.random()*8}s;`;
       document.body.appendChild(s);
     }
-
-    // 流れ星 (ランダムに発生)
     function createShootingStar() {
       const s = document.createElement('div');
       s.className = 'shooting-star';
@@ -29,25 +26,11 @@
       document.body.appendChild(s);
       setTimeout(() => s.remove(), 1300);
     }
-    setInterval(() => {
-      if (Math.random() < 0.55) createShootingStar();
-    }, 3500);
+    setInterval(() => { if (Math.random() < 0.55) createShootingStar(); }, 3500);
   </script>
 
-  <!-- 冬の大三角形 -->
-  <!-- ベテルギウス: 右上, プロキオン: 中央やや右上, シリウス: 下中央右 -->
   <div class="betelgeuse" onclick="toggleAdminPrompt()"></div>
-  <div class="procyon"></div>
-  <div class="sirius"></div>
-  <!-- 三角形の結線 (very faint) -->
-  <!-- right:10%→left:90%, right:38%→left:62%, right:20%→left:80% -->
-  <svg class="winter-triangle-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
-    <line x1="90" y1="15" x2="62" y2="20"/>
-    <line x1="90" y1="15" x2="80" y2="62"/>
-    <line x1="62" y1="20" x2="80" y2="62"/>
-  </svg>
 
-  <!-- ヘッダー -->
   <header class="site-header">
     <div class="site-title-wrap">
       <h1 class="site-title">ISSA YANAGIYA</h1>
@@ -57,45 +40,42 @@
   </header>
 
   <main class="container">
-
-    <!-- カテゴリタブ -->
     <div class="category-tabs">
       <button class="ctab active" data-category="all">ALL</button>
-      <button class="ctab" data-category="oshi_camera">推しカメラ</button>
-      <button class="ctab" data-category="performance">パフォーマンス</button>
-      <button class="ctab" data-category="behind">ビハインド</button>
-      <button class="ctab" data-category="group">グループ</button>
-      <button class="ctab" data-category="individual">個人</button>
+      <button class="ctab" data-category="focus_cam">Focus Cam</button>
+      <button class="ctab" data-category="performance">Performance</button>
+      <button class="ctab" data-category="group">Group</button>
+      <button class="ctab" data-category="solo">Solo</button>
+      <button class="ctab" data-category="behind">Behind</button>
+      <button class="ctab" data-category="photo">Photo</button>
+      <button class="ctab" data-category="others">Others</button>
     </div>
-
-    <!-- 投稿エリア -->
     <div id="postsContainer"></div>
-
   </main>
 
   <footer class="site-footer">
-    <button class="admin-toggle" onclick="toggleAdminPrompt()" title="管理者">🔑</button>
+    <button class="admin-toggle" onclick="toggleAdminPrompt()" title="Admin">🔑</button>
   </footer>
 
-  <!-- 管理者ロック画面 -->
+  <!-- Admin Login -->
   <div id="adminPrompt" class="admin-prompt hidden">
     <div class="admin-prompt-box">
-      <p class="admin-prompt-label">合言葉を入力</p>
-      <input type="password" id="adminSecretInput" placeholder="合言葉" autocomplete="off">
+      <p class="admin-prompt-label">Password</p>
+      <input type="password" id="adminSecretInput" placeholder="Password" autocomplete="off">
       <div class="admin-prompt-btns">
-        <button onclick="submitAdminSecret()">ログイン</button>
-        <button onclick="closeAdminPrompt()">キャンセル</button>
+        <button onclick="submitAdminSecret()">Login</button>
+        <button onclick="closeAdminPrompt()">Cancel</button>
       </div>
       <p id="adminPromptMsg" class="admin-prompt-msg"></p>
     </div>
   </div>
 
-  <!-- 管理者パネル -->
+  <!-- Admin Panel -->
   <div id="adminPanel" class="admin-panel hidden">
     <div class="admin-panel-inner">
       <div class="admin-panel-header">
-        <span>🔑 管理者モード</span>
-        <button onclick="closeAdminPanel()">✕ 閉じる</button>
+        <span>🔑 Admin</span>
+        <button onclick="closeAdminPanel()">✕ Close</button>
       </div>
       <form id="adminForm" class="admin-form">
         <div class="admin-form-row">
@@ -103,12 +83,12 @@
           <input type="url" id="adminUrl" placeholder="https://..." required>
         </div>
         <div class="admin-form-row">
-          <label>タイトル</label>
-          <input type="text" id="adminTitle" placeholder="動画タイトルなど" required>
+          <label>Title</label>
+          <input type="text" id="adminTitle" placeholder="Video title..." required>
         </div>
         <div class="admin-form-row-split">
           <div class="admin-form-row">
-            <label>プラットフォーム</label>
+            <label>Platform</label>
             <select id="adminPlatform">
               <option value="youtube">YouTube</option>
               <option value="x">X</option>
@@ -117,17 +97,19 @@
             </select>
           </div>
           <div class="admin-form-row">
-            <label>カテゴリ</label>
+            <label>Category</label>
             <select id="adminCategory">
-              <option value="oshi_camera">推しカメラ</option>
-              <option value="performance">パフォーマンス</option>
-              <option value="behind">ビハインド</option>
-              <option value="group">グループ</option>
-              <option value="individual">個人</option>
+              <option value="focus_cam">Focus Cam</option>
+              <option value="performance">Performance</option>
+              <option value="group">Group</option>
+              <option value="solo">Solo</option>
+              <option value="behind">Behind</option>
+              <option value="photo">Photo</option>
+              <option value="others">Others</option>
             </select>
           </div>
         </div>
-        <button type="submit" class="btn btn-primary">投稿する</button>
+        <button type="submit" class="btn btn-primary">Post</button>
         <p id="adminMsg" class="form-msg"></p>
       </form>
     </div>
