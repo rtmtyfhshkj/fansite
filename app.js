@@ -89,6 +89,12 @@ function buildEmbed(post) {
   }
 
   if (post.platform === 'tiktok') {
+    if (post.thumbnail_url) {
+      return `<a class="embed-wrap yt-thumb-wrap" href="${escHtml(url)}" target="_blank" rel="noopener noreferrer">
+        <img class="tiktok-thumb" src="${escHtml(post.thumbnail_url)}" alt="">
+        <div class="yt-play-btn">▶</div>
+      </a>`;
+    }
     const id = getTiktokId(url);
     if (id) {
       return `<div class="embed-wrap">
@@ -362,7 +368,8 @@ document.getElementById('adminForm').addEventListener('submit', async e => {
   let   title       = document.getElementById('adminTitle').value.trim();
   const platform    = document.getElementById('adminPlatform').value;
   const category    = document.getElementById('adminCategory').value;
-  const publishedAt = document.getElementById('adminPublishedAt').value || null;
+  const publishedAt   = document.getElementById('adminPublishedAt').value || null;
+  const thumbnailUrl  = document.getElementById('adminThumbnailUrl').value || null;
 
   btn.disabled = true;
   msg.className = 'form-msg';
@@ -372,7 +379,11 @@ document.getElementById('adminForm').addEventListener('submit', async e => {
     title = await fetchYouTubeTitle(url);
   }
 
-  const { error } = await db.from('posts').insert({ url, title, platform, category, published_at: publishedAt });
+  const { error } = await db.from('posts').insert({
+    url, title, platform, category,
+    published_at: publishedAt,
+    thumbnail_url: thumbnailUrl
+  });
   if (error) {
     msg.className = 'form-msg error';
     msg.textContent = `投稿に失敗しました: ${error.message}`;
@@ -383,6 +394,7 @@ document.getElementById('adminForm').addEventListener('submit', async e => {
     document.getElementById('adminUrl').value = '';
     document.getElementById('adminTitle').value = '';
     document.getElementById('adminPublishedAt').value = '';
+    document.getElementById('adminThumbnailUrl').value = '';
     await loadPosts();
     setTimeout(() => { msg.textContent = ''; }, 3000);
   }
@@ -483,13 +495,35 @@ async function fetchYouTubeTitle(url) {
   return '';
 }
 
+// ===== TikTok oEmbed（タイトル＋サムネURL）取得 =====
+
+async function fetchTikTokOembed(url) {
+  try {
+    const res = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`);
+    if (res.ok) {
+      const d = await res.json();
+      return { title: d.title || '', thumbnail_url: d.thumbnail_url || '' };
+    }
+  } catch (e) {}
+  return { title: '', thumbnail_url: '' };
+}
+
 document.getElementById('adminUrl').addEventListener('blur', async function() {
   const url = this.value.trim();
-  const titleField = document.getElementById('adminTitle');
-  if (!url || titleField.value.trim()) return;
+  if (!url) return;
+
+  const titleField     = document.getElementById('adminTitle');
+  const thumbnailField = document.getElementById('adminThumbnailUrl');
+
   if (getYoutubeId(url)) {
-    const t = await fetchYouTubeTitle(url);
-    if (t) titleField.value = t;
+    if (!titleField.value.trim()) {
+      const t = await fetchYouTubeTitle(url);
+      if (t) titleField.value = t;
+    }
+  } else if (getTiktokId(url)) {
+    const data = await fetchTikTokOembed(url);
+    if (!titleField.value.trim() && data.title) titleField.value = data.title;
+    if (data.thumbnail_url) thumbnailField.value = data.thumbnail_url;
   }
 });
 

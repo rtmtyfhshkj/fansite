@@ -342,9 +342,14 @@ body::before {
 .feature-delete { margin-top: 4px; }
 
 /* ===== グリッドコンテナ ===== */
-.posts-grid { columns: 2; column-gap: 14px; }
-@media (max-width: 600px) { .posts-grid { columns: 1; } }
-@media (min-width: 800px) { .posts-grid { columns: 3; } }
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+@media (max-width: 600px) { .posts-grid { grid-template-columns: 1fr; } }
+@media (min-width: 800px) { .posts-grid { grid-template-columns: repeat(3, 1fr); } }
 
 /* ===== 通常投稿カード ===== */
 .post-card {
@@ -355,8 +360,6 @@ body::before {
   backdrop-filter: blur(12px);
   box-shadow: 0 4px 20px rgba(0,0,0,0.4);
   transition: box-shadow 0.2s, transform 0.2s;
-  break-inside: avoid;
-  margin-bottom: 14px;
   animation: fadeSlideIn 0.45s ease both;
 }
 .post-card:hover {
@@ -391,6 +394,15 @@ body::before {
 }
 .embed-wrap iframe {
   width: 100%; border: none; border-radius: 8px; display: block;
+}
+
+/* TikTok サムネイル */
+.tiktok-thumb {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  display: block;
+  border-radius: 10px;
 }
 
 /* YouTube サムネイル */
