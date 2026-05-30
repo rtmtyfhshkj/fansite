@@ -325,7 +325,7 @@ document.getElementById('adminForm').addEventListener('submit', async e => {
   const { error } = await db.from('posts').insert({ url, title, platform, category });
   if (error) {
     msg.className = 'form-msg error';
-    msg.textContent = '投稿に失敗しました';
+    msg.textContent = `投稿に失敗しました: ${error.message}`;
     console.error(error);
   } else {
     msg.className = 'form-msg success';
