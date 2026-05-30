@@ -50,6 +50,13 @@
       <button class="ctab" data-category="photo">Photo</button>
       <button class="ctab" data-category="others">Others</button>
     </div>
+    <div class="list-controls">
+      <div class="sort-btns">
+        <button class="sort-btn active" id="sortNewest" onclick="setSort('newest')">Newest</button>
+        <button class="sort-btn" id="sortOldest" onclick="setSort('oldest')">Oldest</button>
+      </div>
+      <input type="text" id="searchInput" placeholder="Search..." oninput="onSearch(this.value)">
+    </div>
     <div id="postsContainer"></div>
   </main>
 
@@ -109,9 +116,57 @@
             </select>
           </div>
         </div>
+        <div class="admin-form-row">
+          <label>Published Date</label>
+          <input type="date" id="adminPublishedAt">
+        </div>
         <button type="submit" class="btn btn-primary">Post</button>
         <p id="adminMsg" class="form-msg"></p>
       </form>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="admin-prompt hidden">
+    <div class="admin-prompt-box" style="max-width:400px;">
+      <p class="admin-prompt-label">Edit Post</p>
+      <input type="hidden" id="editPostId">
+      <div class="edit-modal-field">
+        <label>Title</label>
+        <input type="text" id="editTitle" placeholder="Title">
+      </div>
+      <div class="edit-modal-split">
+        <div class="edit-modal-field">
+          <label>Platform</label>
+          <select id="editPlatform">
+            <option value="youtube">YouTube</option>
+            <option value="x">X</option>
+            <option value="instagram">Instagram</option>
+            <option value="tiktok">TikTok</option>
+          </select>
+        </div>
+        <div class="edit-modal-field">
+          <label>Category</label>
+          <select id="editCategory">
+            <option value="focus_cam">Focus Cam</option>
+            <option value="performance">Performance</option>
+            <option value="group">Group</option>
+            <option value="solo">Solo</option>
+            <option value="behind">Behind</option>
+            <option value="photo">Photo</option>
+            <option value="others">Others</option>
+          </select>
+        </div>
+      </div>
+      <div class="edit-modal-field">
+        <label>Published Date</label>
+        <input type="date" id="editPublishedAt">
+      </div>
+      <div class="admin-prompt-btns" style="margin-top:4px;">
+        <button onclick="submitEdit()">Save</button>
+        <button onclick="closeEditModal()">Cancel</button>
+      </div>
+      <p id="editMsg" class="admin-prompt-msg"></p>
     </div>
   </div>
 

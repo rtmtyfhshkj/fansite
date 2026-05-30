@@ -2,6 +2,9 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentCategory = 'all';
+let currentSort = 'newest';
+let searchWord = '';
+let searchTimer = null;
 let isAdmin = false;
 
 // ===== ユーティリティ =====
@@ -134,8 +137,15 @@ function buildPostCard(post) {
   div.className = 'post-card';
   div.dataset.id = post.id;
 
-  const deleteBtn = isAdmin
-    ? `<button class="btn-delete-post" onclick="deletePost(${post.id})">Delete</button>`
+  const adminBtns = isAdmin
+    ? `<button class="btn-edit-post"
+        data-id="${post.id}"
+        data-title="${escHtml(post.title || '')}"
+        data-platform="${post.platform}"
+        data-category="${post.category}"
+        data-published-at="${post.published_at || ''}"
+        onclick="openEditModal(this)">Edit</button>
+       <button class="btn-delete-post" onclick="deletePost(${post.id})">Delete</button>`
     : '';
 
   div.innerHTML = `
@@ -145,7 +155,7 @@ function buildPostCard(post) {
     </div>
     ${buildEmbed(post)}
     ${post.title ? `<div class="post-title">${escHtml(post.title)}</div>` : ''}
-    <div style="padding:2px 0 4px;">${deleteBtn}</div>
+    <div style="padding:2px 0 4px;">${adminBtns}</div>
   `;
   return div;
 }
@@ -206,9 +216,24 @@ async function loadPosts() {
   const container = document.getElementById('postsContainer');
   container.innerHTML = '<div class="loading">Loading...</div>';
 
-  let query = db.from('posts').select('*').order('created_at', { ascending: false });
+  let query = db.from('posts').select('*');
+
   if (currentCategory !== 'all') {
     query = query.eq('category', currentCategory);
+  }
+
+  if (searchWord) {
+    query = query.ilike('title', `%${searchWord}%`);
+  }
+
+  if (currentSort === 'oldest') {
+    query = query
+      .order('published_at', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true });
+  } else {
+    query = query
+      .order('published_at', { ascending: false, nullsFirst: true })
+      .order('created_at', { ascending: false });
   }
 
   const { data: posts, error } = await query;
@@ -230,8 +255,8 @@ async function loadPosts() {
   const platforms = [...new Set(posts.map(p => p.platform))];
   platforms.forEach(loadEmbedScript);
 
-  if (currentCategory === 'all') {
-    // カテゴリ順に表示
+  if (currentCategory === 'all' && !searchWord) {
+    // カテゴリ順に表示（ソートはカテゴリ内に適用）
     const categoryOrder = ['focus_cam', 'performance', 'group', 'solo', 'behind', 'photo', 'others', 'oshi_camera', 'individual'];
     const grouped = {};
     posts.forEach(p => {
@@ -269,6 +294,25 @@ document.querySelectorAll('.ctab').forEach(btn => {
     loadPosts();
   });
 });
+
+// ===== ソート切り替え =====
+
+function setSort(sort) {
+  currentSort = sort;
+  document.getElementById('sortNewest').classList.toggle('active', sort === 'newest');
+  document.getElementById('sortOldest').classList.toggle('active', sort === 'oldest');
+  loadPosts();
+}
+
+// ===== ワード検索 =====
+
+function onSearch(value) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    searchWord = value.trim();
+    loadPosts();
+  }, 350);
+}
 
 // ===== 管理者認証 =====
 
@@ -315,10 +359,11 @@ document.getElementById('adminForm').addEventListener('submit', async e => {
   const msg = document.getElementById('adminMsg');
   const btn = e.target.querySelector('button[type=submit]');
 
-  const url      = document.getElementById('adminUrl').value.trim();
-  let   title    = document.getElementById('adminTitle').value.trim();
-  const platform = document.getElementById('adminPlatform').value;
-  const category = document.getElementById('adminCategory').value;
+  const url         = document.getElementById('adminUrl').value.trim();
+  let   title       = document.getElementById('adminTitle').value.trim();
+  const platform    = document.getElementById('adminPlatform').value;
+  const category    = document.getElementById('adminCategory').value;
+  const publishedAt = document.getElementById('adminPublishedAt').value || null;
 
   btn.disabled = true;
   msg.className = 'form-msg';
@@ -328,7 +373,7 @@ document.getElementById('adminForm').addEventListener('submit', async e => {
     title = await fetchYouTubeTitle(url);
   }
 
-  const { error } = await db.from('posts').insert({ url, title, platform, category });
+  const { error } = await db.from('posts').insert({ url, title, platform, category, published_at: publishedAt });
   if (error) {
     msg.className = 'form-msg error';
     msg.textContent = `投稿に失敗しました: ${error.message}`;
@@ -338,6 +383,7 @@ document.getElementById('adminForm').addEventListener('submit', async e => {
     msg.textContent = 'Posted!';
     document.getElementById('adminUrl').value = '';
     document.getElementById('adminTitle').value = '';
+    document.getElementById('adminPublishedAt').value = '';
     await loadPosts();
     setTimeout(() => { msg.textContent = ''; }, 3000);
   }
@@ -351,6 +397,43 @@ async function deletePost(id) {
   const { error } = await db.from('posts').delete().eq('id', id);
   if (!error) await loadPosts();
   else alert('Failed to delete');
+}
+
+// ===== 編集モーダル（管理者） =====
+
+function openEditModal(btn) {
+  document.getElementById('editPostId').value = btn.dataset.id;
+  document.getElementById('editTitle').value = btn.dataset.title;
+  document.getElementById('editPlatform').value = btn.dataset.platform;
+  document.getElementById('editCategory').value = btn.dataset.category;
+  document.getElementById('editPublishedAt').value = btn.dataset.publishedAt;
+  document.getElementById('editMsg').textContent = '';
+  document.getElementById('editModal').classList.remove('hidden');
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').classList.add('hidden');
+}
+
+async function submitEdit() {
+  const id          = document.getElementById('editPostId').value;
+  const title       = document.getElementById('editTitle').value.trim();
+  const platform    = document.getElementById('editPlatform').value;
+  const category    = document.getElementById('editCategory').value;
+  const publishedAt = document.getElementById('editPublishedAt').value || null;
+  const msg         = document.getElementById('editMsg');
+
+  msg.textContent = 'Saving...';
+  msg.style.color = 'var(--text-soft)';
+
+  const { error } = await db.from('posts').update({ title, platform, category, published_at: publishedAt }).eq('id', id);
+  if (error) {
+    msg.textContent = `Failed: ${error.message}`;
+    msg.style.color = '#ff8888';
+  } else {
+    closeEditModal();
+    await loadPosts();
+  }
 }
 
 // ===== YouTube タイトル自動取得 =====
