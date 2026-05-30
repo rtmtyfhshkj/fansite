@@ -11,14 +11,31 @@
 <body>
 
   <script>
-    for (let i = 0; i < 24; i++) {
+    // 星を散りばめる
+    for (let i = 0; i < 120; i++) {
       const s = document.createElement('div');
       s.className = 'sparkle';
-      const size = 3 + Math.random() * 7;
-      s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*98}%;top:${Math.random()*98}%;animation-duration:${1.8+Math.random()*4}s;animation-delay:${Math.random()*7}s;`;
+      const size = 1 + Math.random() * 2.5;
+      s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-duration:${2+Math.random()*5}s;animation-delay:${Math.random()*8}s;`;
       document.body.appendChild(s);
     }
+
+    // 流れ星 (ランダムに発生)
+    function createShootingStar() {
+      const s = document.createElement('div');
+      s.className = 'shooting-star';
+      s.style.left = (5 + Math.random() * 55) + '%';
+      s.style.top  = (3 + Math.random() * 45) + '%';
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 1300);
+    }
+    setInterval(() => {
+      if (Math.random() < 0.55) createShootingStar();
+    }, 3500);
   </script>
+
+  <!-- ベテルギウス -->
+  <div class="betelgeuse"></div>
 
   <!-- ヘッダー -->
   <header class="site-header">
