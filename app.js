@@ -205,7 +205,7 @@ async function loadPosts() {
   const { data: posts, error } = await query;
 
   if (error) {
-    container.innerHTML = '<div class="empty-msg">読み込みに失敗しました。</div>';
+    container.innerHTML = `<div class="empty-msg">読み込みに失敗しました。<br><span style="font-size:11px;opacity:0.55;">${escHtml(error.message)}</span></div>`;
     console.error(error);
     return;
   }

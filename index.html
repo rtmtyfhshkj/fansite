@@ -34,8 +34,18 @@
     }, 3500);
   </script>
 
-  <!-- ベテルギウス -->
+  <!-- 冬の大三角形 -->
+  <!-- ベテルギウス: 右上, プロキオン: 中央やや右上, シリウス: 下中央右 -->
   <div class="betelgeuse"></div>
+  <div class="procyon"></div>
+  <div class="sirius"></div>
+  <!-- 三角形の結線 (very faint) -->
+  <!-- right:10%→left:90%, right:38%→left:62%, right:20%→left:80% -->
+  <svg class="winter-triangle-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
+    <line x1="90" y1="15" x2="62" y2="20"/>
+    <line x1="90" y1="15" x2="80" y2="62"/>
+    <line x1="62" y1="20" x2="80" y2="62"/>
+  </svg>
 
   <!-- ヘッダー -->
   <header class="site-header">
