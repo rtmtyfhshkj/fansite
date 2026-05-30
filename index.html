@@ -42,6 +42,7 @@
   <main class="container">
     <div class="category-tabs">
       <button class="ctab active" data-category="all">ALL</button>
+      <button class="ctab" data-category="recommend">★ Recommend</button>
       <button class="ctab" data-category="focus_cam">Focus Cam</button>
       <button class="ctab" data-category="performance">Performance</button>
       <button class="ctab" data-category="group">Group</button>
@@ -51,7 +52,7 @@
       <button class="ctab" data-category="others">Others</button>
     </div>
     <div class="list-controls">
-      <div class="sort-btns">
+      <div class="sort-btns" id="sortControls">
         <button class="sort-btn active" id="sortNewest" onclick="setSort('newest')">▼ NEW</button>
         <button class="sort-btn" id="sortOldest" onclick="setSort('oldest')">▲ OLD</button>
       </div>

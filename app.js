@@ -6,6 +6,7 @@ let currentSort = 'newest';
 let searchWord = '';
 let searchTimer = null;
 let isAdmin = false;
+let currentPosts = [];
 
 // ===== ユーティリティ =====
 
@@ -19,6 +20,7 @@ function categoryLabel(cat) {
   const map = {
     focus_cam: 'Focus Cam', performance: 'Performance', group: 'Group',
     solo: 'Solo', behind: 'Behind', photo: 'Photo', others: 'Others',
+    recommend: 'Recommend',
     // legacy
     oshi_camera: 'Focus Cam', individual: 'Solo'
   };
@@ -103,39 +105,24 @@ function buildEmbed(post) {
   </div>`;
 }
 
-// ===== 推しカメラ: フィーチャーカード =====
-
-function buildFeatureCard(post) {
-  const div = document.createElement('div');
-  div.className = 'feature-card';
-  div.dataset.id = post.id;
-
-  const deleteBtn = isAdmin
-    ? `<div class="feature-delete"><button class="btn-delete-post" onclick="deletePost(${post.id})">Delete</button></div>`
-    : '';
-
-  div.innerHTML = `
-    <div class="feature-card-inner">
-      <div class="feature-embed">${buildEmbed(post)}</div>
-      <div class="feature-info">
-        <div class="feature-badge">
-          <span class="feature-platform-tag tag-${post.platform}">${platformLabel(post.platform)}</span>
-          <span class="feature-category-tag">${categoryLabel(post.category)}</span>
-        </div>
-        <div class="feature-label">${escHtml(post.title || categoryLabel(post.category))}</div>
-        ${deleteBtn}
-      </div>
-    </div>
-  `;
-  return div;
-}
-
 // ===== 通常投稿カード =====
 
 function buildPostCard(post) {
   const div = document.createElement('div');
   div.className = 'post-card';
   div.dataset.id = post.id;
+
+  const isRec = !!post.is_recommended;
+
+  // 星ボタン（admin: クリック可／一般: 星印のみ）
+  const starEl = isAdmin
+    ? `<button class="btn-star-post${isRec ? ' starred' : ''}" onclick="toggleRecommend(${post.id},${isRec})">★</button>`
+    : (isRec ? '<span class="star-badge">★</span>' : '');
+
+  // Recommendタブ内かつ管理者のみ ↑↓ ボタン
+  const orderBtns = isAdmin && currentCategory === 'recommend'
+    ? `<button class="btn-order-post" onclick="moveRecommend(${post.id},'up')">↑</button><button class="btn-order-post" onclick="moveRecommend(${post.id},'down')">↓</button>`
+    : '';
 
   const adminBtns = isAdmin
     ? `<button class="btn-edit-post"
@@ -151,11 +138,14 @@ function buildPostCard(post) {
   div.innerHTML = `
     <div class="post-badge badge-${post.platform}">
       <span>${platformLabel(post.platform)}</span>
-      <span class="badge-category">${categoryLabel(post.category)}</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="badge-category">${categoryLabel(post.category)}</span>
+        ${starEl}
+      </div>
     </div>
     ${buildEmbed(post)}
     ${post.title ? `<div class="post-title">${escHtml(post.title)}</div>` : ''}
-    <div style="padding:2px 0 4px;">${adminBtns}</div>
+    <div style="padding:2px 0 4px;">${orderBtns}${adminBtns}</div>
   `;
   return div;
 }
@@ -210,6 +200,13 @@ function buildSectionHeader(cat) {
   return div;
 }
 
+// ===== ソートコントロール表示切り替え =====
+
+function updateSortVisibility() {
+  document.getElementById('sortControls').style.display =
+    currentCategory === 'recommend' ? 'none' : 'flex';
+}
+
 // ===== 投稿一覧を取得・表示 =====
 
 async function loadPosts() {
@@ -218,22 +215,26 @@ async function loadPosts() {
 
   let query = db.from('posts').select('*');
 
-  if (currentCategory !== 'all') {
-    query = query.eq('category', currentCategory);
-  }
-
-  if (searchWord) {
-    query = query.ilike('title', `%${searchWord}%`);
-  }
-
-  if (currentSort === 'oldest') {
+  if (currentCategory === 'recommend') {
+    query = query.eq('is_recommended', true);
+    if (searchWord) query = query.ilike('title', `%${searchWord}%`);
     query = query
-      .order('published_at', { ascending: true, nullsFirst: false })
-      .order('created_at', { ascending: true });
-  } else {
-    query = query
-      .order('published_at', { ascending: false, nullsFirst: true })
+      .order('recommend_order', { ascending: true })
       .order('created_at', { ascending: false });
+  } else {
+    if (currentCategory !== 'all') {
+      query = query.eq('category', currentCategory);
+    }
+    if (searchWord) query = query.ilike('title', `%${searchWord}%`);
+    if (currentSort === 'oldest') {
+      query = query
+        .order('published_at', { ascending: true, nullsFirst: false })
+        .order('created_at', { ascending: true });
+    } else {
+      query = query
+        .order('published_at', { ascending: false, nullsFirst: true })
+        .order('created_at', { ascending: false });
+    }
   }
 
   const { data: posts, error } = await query;
@@ -244,6 +245,7 @@ async function loadPosts() {
     return;
   }
 
+  currentPosts = posts || [];
   container.innerHTML = '';
 
   if (!posts || posts.length === 0) {
@@ -251,12 +253,10 @@ async function loadPosts() {
     return;
   }
 
-  // 使用プラットフォームのスクリプトをロード
   const platforms = [...new Set(posts.map(p => p.platform))];
   platforms.forEach(loadEmbedScript);
 
   if (currentCategory === 'all' && !searchWord) {
-    // カテゴリ順に表示（ソートはカテゴリ内に適用）
     const categoryOrder = ['focus_cam', 'performance', 'group', 'solo', 'behind', 'photo', 'others', 'oshi_camera', 'individual'];
     const grouped = {};
     posts.forEach(p => {
@@ -266,9 +266,7 @@ async function loadPosts() {
 
     categoryOrder.forEach(cat => {
       if (!grouped[cat] || grouped[cat].length === 0) return;
-
       container.appendChild(buildSectionHeader(cat));
-
       const grid = document.createElement('div');
       grid.className = 'posts-grid';
       grouped[cat].forEach(p => grid.appendChild(buildPostCard(p)));
@@ -291,6 +289,7 @@ document.querySelectorAll('.ctab').forEach(btn => {
     document.querySelectorAll('.ctab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentCategory = btn.dataset.category;
+    updateSortVisibility();
     loadPosts();
   });
 });
@@ -399,6 +398,44 @@ async function deletePost(id) {
   else alert('Failed to delete');
 }
 
+// ===== Recommend: 星トグル（管理者） =====
+
+async function toggleRecommend(id, isRec) {
+  if (!isRec) {
+    const { data } = await db.from('posts')
+      .select('recommend_order')
+      .eq('is_recommended', true)
+      .order('recommend_order', { ascending: false })
+      .limit(1);
+    const maxOrder = data && data.length > 0 ? (data[0].recommend_order || 0) : 0;
+    await db.from('posts').update({ is_recommended: true, recommend_order: maxOrder + 1 }).eq('id', id);
+  } else {
+    await db.from('posts').update({ is_recommended: false }).eq('id', id);
+  }
+  await loadPosts();
+}
+
+// ===== Recommend: 並び替え（管理者） =====
+
+async function moveRecommend(id, direction) {
+  const sorted = [...currentPosts].sort((a, b) => a.recommend_order - b.recommend_order);
+  const idx = sorted.findIndex(p => p.id === id);
+  if (idx === -1) return;
+
+  const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+  if (swapIdx < 0 || swapIdx >= sorted.length) return;
+
+  const postA = sorted[idx];
+  const postB = sorted[swapIdx];
+
+  await Promise.all([
+    db.from('posts').update({ recommend_order: postB.recommend_order }).eq('id', postA.id),
+    db.from('posts').update({ recommend_order: postA.recommend_order }).eq('id', postB.id),
+  ]);
+
+  await loadPosts();
+}
+
 // ===== 編集モーダル（管理者） =====
 
 function openEditModal(btn) {
@@ -457,4 +494,5 @@ document.getElementById('adminUrl').addEventListener('blur', async function() {
 });
 
 // ===== 初期化 =====
+updateSortVisibility();
 loadPosts();
