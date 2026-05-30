@@ -58,7 +58,10 @@ function buildEmbed(post) {
   if (post.platform === 'youtube') {
     const id = getYoutubeId(url);
     if (id) {
-      return `<div class="embed-wrap"><iframe src="https://www.youtube.com/embed/${id}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>`;
+      return `<div class="embed-wrap yt-thumb-wrap" onclick="loadYouTube(this,'${id}')">
+        <img class="yt-thumb" src="https://img.youtube.com/vi/${id}/hqdefault.jpg" alt="">
+        <div class="yt-play-btn">▶</div>
+      </div>`;
     }
   }
 
@@ -344,6 +347,14 @@ async function deletePost(id) {
   const { error } = await db.from('posts').delete().eq('id', id);
   if (!error) await loadPosts();
   else alert('Failed to delete');
+}
+
+// ===== YouTube サムネ → iframe 切り替え =====
+
+function loadYouTube(wrap, id) {
+  wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;aspect-ratio:16/9;border:none;border-radius:10px;display:block;"></iframe>`;
+  wrap.classList.remove('yt-thumb-wrap');
+  wrap.onclick = null;
 }
 
 // ===== 初期化 =====
