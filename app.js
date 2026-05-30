@@ -1,41 +1,11 @@
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentPostId = null;
+let currentPlatform = 'youtube';
+let currentCategory = 'all';
+let isAdmin = false;
 
-function formatDate(dateStr) {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-}
-
-function detectPlatform(url) {
-  if (/youtube\.com|youtu\.be/.test(url)) return 'youtube';
-  if (/instagram\.com/.test(url)) return 'instagram';
-  return 'other';
-}
-
-function getYoutubeEmbedUrl(url) {
-  let videoId = null;
-  try {
-    const u = new URL(url);
-    if (u.hostname === 'youtu.be') {
-      videoId = u.pathname.slice(1).split('?')[0];
-    } else if (u.hostname.includes('youtube.com')) {
-      videoId = u.searchParams.get('v');
-      if (!videoId) {
-        const m = u.pathname.match(/\/shorts\/([^/?]+)/);
-        if (m) videoId = m[1];
-      }
-    }
-  } catch (e) {}
-  return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-}
-
-function platformLabel(platform) {
-  if (platform === 'youtube') return '▶ YouTube';
-  if (platform === 'instagram') return '📷 Instagram';
-  return '🔗 Link';
-}
+// ===== ユーティリティ =====
 
 function escHtml(str) {
   return String(str)
@@ -43,100 +13,259 @@ function escHtml(str) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-function buildPostCard(post) {
-  const div = document.createElement('div');
-  div.className = 'post-card';
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+}
 
-  let embedHtml = '';
+function categoryLabel(cat) {
+  const map = { performance: 'パフォーマンス', oshi_camera: '推しカメラ', behind: 'ビハインド', group: 'グループ', individual: '個人' };
+  return map[cat] || cat;
+}
+
+function platformLabel(p) {
+  const map = { youtube: '▶ YouTube', x: '𝕏 X', instagram: '📷 Instagram', tiktok: '🎵 TikTok' };
+  return map[p] || p;
+}
+
+// ===== URL解析 =====
+
+function getYoutubeId(url) {
+  try {
+    const u = new URL(url);
+    if (u.hostname === 'youtu.be') return u.pathname.slice(1).split('?')[0];
+    if (u.hostname.includes('youtube.com')) {
+      const v = u.searchParams.get('v');
+      if (v) return v;
+      const m = u.pathname.match(/\/(?:shorts|embed)\/([^/?]+)/);
+      if (m) return m[1];
+    }
+  } catch (e) {}
+  return null;
+}
+
+function getTiktokId(url) {
+  try {
+    const m = url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);
+    return m ? m[1] : null;
+  } catch (e) { return null; }
+}
+
+// ===== 埋め込みHTML生成 =====
+
+function buildEmbed(post) {
+  const url = post.url;
+
   if (post.platform === 'youtube') {
-    const embedUrl = getYoutubeEmbedUrl(post.url);
-    if (embedUrl) {
-      embedHtml = `<div class="post-embed">
-        <iframe src="${embedUrl}" height="160" allowfullscreen loading="lazy"></iframe>
-      </div>`;
+    const id = getYoutubeId(url);
+    if (id) {
+      return `<div class="embed-wrap"><iframe src="https://www.youtube.com/embed/${id}" height="200" allowfullscreen loading="lazy"></iframe></div>`;
     }
   }
-  if (!embedHtml) {
-    embedHtml = `<div class="post-embed">
-      <div class="post-embed-placeholder">
-        <a href="${escHtml(post.url)}" target="_blank" rel="noopener noreferrer">🔗 リンクを開く</a>
-      </div>
+
+  if (post.platform === 'x') {
+    return `<div class="embed-wrap" id="tw-${post.id}">
+      <blockquote class="twitter-tweet" data-dnt="true">
+        <a href="${escHtml(url)}"></a>
+      </blockquote>
     </div>`;
   }
 
+  if (post.platform === 'instagram') {
+    return `<div class="embed-wrap">
+      <blockquote class="instagram-media"
+        data-instgrm-permalink="${escHtml(url)}"
+        data-instgrm-version="14"
+        style="min-width:100%;max-width:100%;margin:0;">
+      </blockquote>
+    </div>`;
+  }
+
+  if (post.platform === 'tiktok') {
+    const id = getTiktokId(url);
+    if (id) {
+      return `<div class="embed-wrap">
+        <blockquote class="tiktok-embed" cite="${escHtml(url)}" data-video-id="${id}" style="min-width:100%;max-width:100%;">
+        </blockquote>
+      </div>`;
+    }
+  }
+
+  // フォールバック: リンクカード
+  return `<div class="embed-wrap">
+    <a class="link-card" href="${escHtml(url)}" target="_blank" rel="noopener noreferrer">
+      🔗 ${escHtml(url)}
+    </a>
+  </div>`;
+}
+
+// ===== 投稿カード生成 =====
+
+function buildPostCard(post) {
+  const div = document.createElement('div');
+  div.className = 'post-card';
+  div.dataset.id = post.id;
+
+  const deleteBtn = isAdmin
+    ? `<button class="btn-delete-post" onclick="deletePost(${post.id})">削除</button>`
+    : '';
+
   div.innerHTML = `
-    <div class="post-platform-badge platform-${post.platform}">${platformLabel(post.platform)}</div>
-    ${embedHtml}
-    <div class="post-body">
-      <div class="post-title">${escHtml(post.title)}</div>
-      ${post.description ? `<div class="post-desc">${escHtml(post.description)}</div>` : ''}
-      <div class="post-meta">
-        <span class="post-author">✦ ${escHtml(post.author)}</span>
-        <span>${formatDate(post.created_at)}</span>
-      </div>
-      <div class="post-actions">
-        <button class="btn btn-comment" onclick="openComments(${post.id}, '${escHtml(post.title).replace(/'/g,"\\'")}')">
-          💬 コメント <span class="comment-count" id="cc-${post.id}">(読込中)</span>
-        </button>
-      </div>
+    <div class="post-badge badge-${post.platform}">
+      <span>${platformLabel(post.platform)}</span>
+      <span class="badge-category">${categoryLabel(post.category)}</span>
     </div>
+    ${buildEmbed(post)}
+    <div style="padding:2px 0 4px;">${deleteBtn}</div>
   `;
   return div;
 }
 
-async function loadCommentCount(postId) {
-  const { count } = await db.from('comments').select('*', { count: 'exact', head: true }).eq('post_id', postId);
-  const el = document.getElementById(`cc-${postId}`);
-  if (el) el.textContent = `(${count ?? 0})`;
+// ===== 外部埋め込みスクリプト読み込み =====
+
+let twitterLoaded = false;
+let instagramLoaded = false;
+let tiktokLoaded = false;
+
+function loadEmbedScript(platform) {
+  if (platform === 'x' && !twitterLoaded) {
+    twitterLoaded = true;
+    const s = document.createElement('script');
+    s.src = 'https://platform.twitter.com/widgets.js';
+    s.async = true;
+    document.body.appendChild(s);
+  }
+  if (platform === 'instagram' && !instagramLoaded) {
+    instagramLoaded = true;
+    const s = document.createElement('script');
+    s.src = 'https://www.instagram.com/embed.js';
+    s.async = true;
+    document.body.appendChild(s);
+  }
+  if (platform === 'tiktok' && !tiktokLoaded) {
+    tiktokLoaded = true;
+    const s = document.createElement('script');
+    s.src = 'https://www.tiktok.com/embed.js';
+    s.async = true;
+    document.body.appendChild(s);
+  }
 }
+
+// ===== 埋め込みを再処理 =====
+
+function processEmbeds(platform) {
+  if (platform === 'x' && window.twttr && twttr.widgets) {
+    twttr.widgets.load();
+  }
+  if (platform === 'instagram' && window.instgrm) {
+    instgrm.Embeds.process();
+  }
+}
+
+// ===== 投稿一覧を取得・表示 =====
 
 async function loadPosts() {
   const container = document.getElementById('postsContainer');
   container.innerHTML = '<div class="loading">読み込み中...</div>';
-  const { data: posts, error } = await db
-    .from('posts')
-    .select('*')
-    .order('created_at', { ascending: false });
+
+  let query = db.from('posts').select('*').eq('platform', currentPlatform).order('created_at', { ascending: false });
+  if (currentCategory !== 'all') {
+    query = query.eq('category', currentCategory);
+  }
+
+  const { data: posts, error } = await query;
 
   if (error) {
-    container.innerHTML = '<div class="empty-msg">読み込みに失敗しました。config.js の設定を確認してください。</div>';
+    container.innerHTML = '<div class="empty-msg">読み込みに失敗しました。</div>';
     console.error(error);
     return;
   }
+
   container.innerHTML = '';
   if (!posts || posts.length === 0) {
-    container.innerHTML = '<div class="empty-msg">まだ投稿がありません。最初の投稿をしよう！</div>';
+    container.innerHTML = '<div class="empty-msg">投稿がありません</div>';
     return;
   }
-  posts.forEach(p => {
-    container.appendChild(buildPostCard(p));
-    loadCommentCount(p.id);
-  });
+
+  loadEmbedScript(currentPlatform);
+  posts.forEach(p => container.appendChild(buildPostCard(p)));
+  setTimeout(() => processEmbeds(currentPlatform), 800);
 }
 
-document.getElementById('postForm').addEventListener('submit', async (e) => {
+// ===== タブ切り替え =====
+
+document.querySelectorAll('.ptab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentPlatform = btn.dataset.platform;
+    loadPosts();
+  });
+});
+
+document.querySelectorAll('.ctab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.ctab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentCategory = btn.dataset.category;
+    loadPosts();
+  });
+});
+
+// ===== 管理者認証 =====
+
+function toggleAdminPrompt() {
+  if (isAdmin) {
+    document.getElementById('adminPanel').classList.toggle('hidden');
+  } else {
+    document.getElementById('adminPrompt').classList.remove('hidden');
+    setTimeout(() => document.getElementById('adminSecretInput').focus(), 50);
+  }
+}
+
+function closeAdminPrompt() {
+  document.getElementById('adminPrompt').classList.add('hidden');
+  document.getElementById('adminSecretInput').value = '';
+  document.getElementById('adminPromptMsg').textContent = '';
+}
+
+function submitAdminSecret() {
+  const input = document.getElementById('adminSecretInput').value;
+  if (input === SECRET_WORD) {
+    isAdmin = true;
+    closeAdminPrompt();
+    document.getElementById('adminPanel').classList.remove('hidden');
+    loadPosts();
+  } else {
+    document.getElementById('adminPromptMsg').textContent = '合言葉が違います';
+  }
+}
+
+document.getElementById('adminSecretInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitAdminSecret();
+  if (e.key === 'Escape') closeAdminPrompt();
+});
+
+function closeAdminPanel() {
+  document.getElementById('adminPanel').classList.add('hidden');
+}
+
+// ===== 投稿（管理者） =====
+
+document.getElementById('adminForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const msg = document.getElementById('postMsg');
+  const msg = document.getElementById('adminMsg');
   const btn = e.target.querySelector('button[type=submit]');
 
-  const secret = document.getElementById('postSecret').value;
-  if (secret !== SECRET_WORD) {
-    msg.className = 'form-msg error';
-    msg.textContent = '合言葉が違います';
-    return;
-  }
-
-  const url = document.getElementById('postUrl').value.trim();
-  const title = document.getElementById('postTitle').value.trim();
-  const description = document.getElementById('postDesc').value.trim();
-  const author = document.getElementById('postAuthor').value.trim();
-  const platform = detectPlatform(url);
+  const url      = document.getElementById('adminUrl').value.trim();
+  const platform = document.getElementById('adminPlatform').value;
+  const category = document.getElementById('adminCategory').value;
 
   btn.disabled = true;
   msg.className = 'form-msg';
   msg.textContent = '投稿中...';
 
-  const { error } = await db.from('posts').insert({ url, platform, title, description, author });
+  const { error } = await db.from('posts').insert({ url, platform, category });
   if (error) {
     msg.className = 'form-msg error';
     msg.textContent = '投稿に失敗しました';
@@ -144,91 +273,22 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   } else {
     msg.className = 'form-msg success';
     msg.textContent = '投稿しました！';
-    e.target.reset();
-    await loadPosts();
+    document.getElementById('adminUrl').value = '';
+    // 現在のタブが投稿したプラットフォームと一致する場合は更新
+    if (currentPlatform === platform) await loadPosts();
     setTimeout(() => { msg.textContent = ''; }, 3000);
   }
   btn.disabled = false;
 });
 
-async function openComments(postId, title) {
-  currentPostId = postId;
-  document.getElementById('modalTitle').textContent = `💬 ${title}`;
-  document.getElementById('commentContent').value = '';
-  document.getElementById('commentMsg').textContent = '';
-  document.getElementById('commentModal').classList.remove('hidden');
-  await loadComments(postId);
+// ===== 削除（管理者） =====
+
+async function deletePost(id) {
+  if (!confirm('この投稿を削除しますか？')) return;
+  const { error } = await db.from('posts').delete().eq('id', id);
+  if (!error) await loadPosts();
+  else alert('削除に失敗しました');
 }
 
-function closeModal() {
-  document.getElementById('commentModal').classList.add('hidden');
-  currentPostId = null;
-}
-
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
-
-async function loadComments(postId) {
-  const list = document.getElementById('commentsList');
-  list.innerHTML = '<div class="no-comments">読み込み中...</div>';
-  const { data: comments, error } = await db
-    .from('comments')
-    .select('*')
-    .eq('post_id', postId)
-    .order('created_at', { ascending: true });
-
-  list.innerHTML = '';
-  if (error || !comments || comments.length === 0) {
-    list.innerHTML = '<div class="no-comments">まだコメントがありません。最初のコメントをどうぞ！</div>';
-    return;
-  }
-  comments.forEach(c => {
-    const item = document.createElement('div');
-    item.className = 'comment-item';
-    item.innerHTML = `
-      <div class="comment-header">
-        <span class="comment-author">✦ ${escHtml(c.author)}</span>
-        <span class="comment-date">${formatDate(c.created_at)}</span>
-      </div>
-      <div class="comment-content">${escHtml(c.content)}</div>
-    `;
-    list.appendChild(item);
-  });
-}
-
-document.getElementById('commentForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  if (!currentPostId) return;
-  const msg = document.getElementById('commentMsg');
-  const btn = e.target.querySelector('button[type=submit]');
-
-  const secret = document.getElementById('commentSecret').value;
-  if (secret !== SECRET_WORD) {
-    msg.className = 'form-msg error';
-    msg.textContent = '合言葉が違います';
-    return;
-  }
-
-  const content = document.getElementById('commentContent').value.trim();
-  const author = document.getElementById('commentAuthor').value.trim();
-
-  btn.disabled = true;
-  msg.className = 'form-msg';
-  msg.textContent = '送信中...';
-
-  const { error } = await db.from('comments').insert({ post_id: currentPostId, content, author });
-  if (error) {
-    msg.className = 'form-msg error';
-    msg.textContent = 'コメントに失敗しました';
-    console.error(error);
-  } else {
-    msg.className = 'form-msg success';
-    msg.textContent = 'コメントしました！';
-    document.getElementById('commentContent').value = '';
-    await loadComments(currentPostId);
-    loadCommentCount(currentPostId);
-    setTimeout(() => { msg.textContent = ''; }, 3000);
-  }
-  btn.disabled = false;
-});
-
+// ===== 初期化 =====
 loadPosts();
