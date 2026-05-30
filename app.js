@@ -1,7 +1,6 @@
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentPlatform = 'youtube';
 let currentCategory = 'all';
 let isAdmin = false;
 
@@ -11,11 +10,6 @@ function escHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;')
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-}
-
-function formatDate(dateStr) {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
 }
 
 function categoryLabel(cat) {
@@ -64,7 +58,7 @@ function buildEmbed(post) {
   }
 
   if (post.platform === 'x') {
-    return `<div class="embed-wrap" id="tw-${post.id}">
+    return `<div class="embed-wrap">
       <blockquote class="twitter-tweet" data-dnt="true">
         <a href="${escHtml(url)}"></a>
       </blockquote>
@@ -91,7 +85,6 @@ function buildEmbed(post) {
     }
   }
 
-  // フォールバック: リンクカード
   return `<div class="embed-wrap">
     <a class="link-card" href="${escHtml(url)}" target="_blank" rel="noopener noreferrer">
       🔗 ${escHtml(url)}
@@ -99,7 +92,34 @@ function buildEmbed(post) {
   </div>`;
 }
 
-// ===== 投稿カード生成 =====
+// ===== 推しカメラ: フィーチャーカード =====
+
+function buildFeatureCard(post) {
+  const div = document.createElement('div');
+  div.className = 'feature-card';
+  div.dataset.id = post.id;
+
+  const deleteBtn = isAdmin
+    ? `<div class="feature-delete"><button class="btn-delete-post" onclick="deletePost(${post.id})">削除</button></div>`
+    : '';
+
+  div.innerHTML = `
+    <div class="feature-card-inner">
+      <div class="feature-embed">${buildEmbed(post)}</div>
+      <div class="feature-info">
+        <div class="feature-badge">
+          <span class="feature-platform-tag tag-${post.platform}">${platformLabel(post.platform)}</span>
+          <span class="feature-category-tag">${categoryLabel(post.category)}</span>
+        </div>
+        <div class="feature-label">推しカメラ</div>
+        ${deleteBtn}
+      </div>
+    </div>
+  `;
+  return div;
+}
+
+// ===== 通常投稿カード =====
 
 function buildPostCard(post) {
   const div = document.createElement('div');
@@ -123,35 +143,31 @@ function buildPostCard(post) {
 
 // ===== 外部埋め込みスクリプト読み込み =====
 
-let twitterLoaded = false;
-let instagramLoaded = false;
-let tiktokLoaded = false;
+const loadedScripts = new Set();
 
 function loadEmbedScript(platform) {
-  if (platform === 'x' && !twitterLoaded) {
-    twitterLoaded = true;
+  if (platform === 'x' && !loadedScripts.has('x')) {
+    loadedScripts.add('x');
     const s = document.createElement('script');
     s.src = 'https://platform.twitter.com/widgets.js';
     s.async = true;
     document.body.appendChild(s);
   }
-  if (platform === 'instagram' && !instagramLoaded) {
-    instagramLoaded = true;
+  if (platform === 'instagram' && !loadedScripts.has('instagram')) {
+    loadedScripts.add('instagram');
     const s = document.createElement('script');
     s.src = 'https://www.instagram.com/embed.js';
     s.async = true;
     document.body.appendChild(s);
   }
-  if (platform === 'tiktok' && !tiktokLoaded) {
-    tiktokLoaded = true;
+  if (platform === 'tiktok' && !loadedScripts.has('tiktok')) {
+    loadedScripts.add('tiktok');
     const s = document.createElement('script');
     s.src = 'https://www.tiktok.com/embed.js';
     s.async = true;
     document.body.appendChild(s);
   }
 }
-
-// ===== 埋め込みを再処理 =====
 
 function processEmbeds(platform) {
   if (platform === 'x' && window.twttr && twttr.widgets) {
@@ -162,13 +178,26 @@ function processEmbeds(platform) {
   }
 }
 
+// ===== セクションヘッダー生成 =====
+
+function buildSectionHeader(cat) {
+  const div = document.createElement('div');
+  div.className = 'section-header';
+  div.innerHTML = `
+    <span class="section-dot"></span>
+    <span class="section-title">${categoryLabel(cat)}</span>
+    <span class="section-line"></span>
+  `;
+  return div;
+}
+
 // ===== 投稿一覧を取得・表示 =====
 
 async function loadPosts() {
   const container = document.getElementById('postsContainer');
   container.innerHTML = '<div class="loading">読み込み中...</div>';
 
-  let query = db.from('posts').select('*').eq('platform', currentPlatform).order('created_at', { ascending: false });
+  let query = db.from('posts').select('*').order('created_at', { ascending: false });
   if (currentCategory !== 'all') {
     query = query.eq('category', currentCategory);
   }
@@ -182,26 +211,52 @@ async function loadPosts() {
   }
 
   container.innerHTML = '';
+
   if (!posts || posts.length === 0) {
     container.innerHTML = '<div class="empty-msg">投稿がありません</div>';
     return;
   }
 
-  loadEmbedScript(currentPlatform);
-  posts.forEach(p => container.appendChild(buildPostCard(p)));
-  setTimeout(() => processEmbeds(currentPlatform), 800);
+  // 使用プラットフォームのスクリプトをロード
+  const platforms = [...new Set(posts.map(p => p.platform))];
+  platforms.forEach(loadEmbedScript);
+
+  if (currentCategory === 'all') {
+    // カテゴリ順に表示
+    const categoryOrder = ['oshi_camera', 'performance', 'behind', 'group', 'individual'];
+    const grouped = {};
+    posts.forEach(p => {
+      if (!grouped[p.category]) grouped[p.category] = [];
+      grouped[p.category].push(p);
+    });
+
+    categoryOrder.forEach(cat => {
+      if (!grouped[cat] || grouped[cat].length === 0) return;
+
+      container.appendChild(buildSectionHeader(cat));
+
+      if (cat === 'oshi_camera') {
+        grouped[cat].forEach(p => container.appendChild(buildFeatureCard(p)));
+      } else {
+        const grid = document.createElement('div');
+        grid.className = 'posts-grid';
+        grouped[cat].forEach(p => grid.appendChild(buildPostCard(p)));
+        container.appendChild(grid);
+      }
+    });
+  } else if (currentCategory === 'oshi_camera') {
+    posts.forEach(p => container.appendChild(buildFeatureCard(p)));
+  } else {
+    const grid = document.createElement('div');
+    grid.className = 'posts-grid';
+    posts.forEach(p => grid.appendChild(buildPostCard(p)));
+    container.appendChild(grid);
+  }
+
+  setTimeout(() => platforms.forEach(processEmbeds), 800);
 }
 
-// ===== タブ切り替え =====
-
-document.querySelectorAll('.ptab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentPlatform = btn.dataset.platform;
-    loadPosts();
-  });
-});
+// ===== カテゴリタブ切り替え =====
 
 document.querySelectorAll('.ctab').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -274,8 +329,7 @@ document.getElementById('adminForm').addEventListener('submit', async e => {
     msg.className = 'form-msg success';
     msg.textContent = '投稿しました！';
     document.getElementById('adminUrl').value = '';
-    // 現在のタブが投稿したプラットフォームと一致する場合は更新
-    if (currentPlatform === platform) await loadPosts();
+    await loadPosts();
     setTimeout(() => { msg.textContent = ''; }, 3000);
   }
   btn.disabled = false;
