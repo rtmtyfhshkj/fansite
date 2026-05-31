@@ -20,7 +20,7 @@ function categoryLabel(cat) {
   const map = {
     focus_cam: 'Focus Cam', performance: 'Performance', group: 'Group',
     solo: 'Solo', behind: 'Behind', photo: 'Photo', others: 'Others',
-    recommend: 'Recommend',
+    recommend: '★ Recommend',
     // legacy
     oshi_camera: 'Focus Cam', individual: 'Solo'
   };
@@ -79,6 +79,12 @@ function buildEmbed(post) {
   }
 
   if (post.platform === 'instagram') {
+    if (post.thumbnail_url) {
+      return `<a class="embed-wrap yt-thumb-wrap" href="${escHtml(url)}" target="_blank" rel="noopener noreferrer">
+        <img class="yt-thumb" src="${escHtml(post.thumbnail_url)}" alt="">
+        <div class="yt-play-btn" style="font-size:16px;">↗</div>
+      </a>`;
+    }
     return `<div class="embed-wrap">
       <blockquote class="instagram-media"
         data-instgrm-permalink="${escHtml(url)}"
@@ -269,6 +275,18 @@ async function loadPosts() {
       if (!grouped[p.category]) grouped[p.category] = [];
       grouped[p.category].push(p);
     });
+
+    // Recommend セクションを一番上に表示
+    const recommendPosts = posts
+      .filter(p => p.is_recommended)
+      .sort((a, b) => (a.recommend_order || 0) - (b.recommend_order || 0));
+    if (recommendPosts.length > 0) {
+      container.appendChild(buildSectionHeader('recommend'));
+      const grid = document.createElement('div');
+      grid.className = 'posts-grid';
+      recommendPosts.forEach(p => grid.appendChild(buildPostCard(p)));
+      container.appendChild(grid);
+    }
 
     categoryOrder.forEach(cat => {
       if (!grouped[cat] || grouped[cat].length === 0) return;
