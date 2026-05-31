@@ -501,6 +501,7 @@ body::before {
   color: var(--text-soft);
   letter-spacing: 0.06em;
   margin-bottom: 4px;
+  text-align: center;
 }
 .site-credit a {
   color: var(--text-soft);
