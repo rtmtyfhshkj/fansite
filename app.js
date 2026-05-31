@@ -97,7 +97,7 @@ function buildEmbed(post) {
   if (post.platform === 'tiktok') {
     if (post.thumbnail_url) {
       return `<a class="embed-wrap yt-thumb-wrap" href="${escHtml(url)}" target="_blank" rel="noopener noreferrer">
-        <div class="tiktok-thumb-container">
+        <div class="tiktok-thumb-container" style="--bg:url('${escHtml(post.thumbnail_url)}')">
           <img class="tiktok-thumb" src="${escHtml(post.thumbnail_url)}" referrerpolicy="no-referrer" alt="">
         </div>
         <div class="yt-play-btn">▶</div>

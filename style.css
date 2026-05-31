@@ -396,14 +396,22 @@ body::before {
   width: 100%; border: none; border-radius: 8px; display: block;
 }
 
-/* TikTok サムネイル（16:9コンテナに縦長画像を中央配置） */
+/* TikTok サムネイル（16:9コンテナ・ぼかし背景） */
 .tiktok-thumb-container {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: #000;
   border-radius: 10px;
   overflow: hidden;
+  background: #000;
+}
+.tiktok-thumb-container::before {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  background: var(--bg) center / cover no-repeat;
+  filter: blur(14px) brightness(0.45);
+  z-index: 0;
 }
 .tiktok-thumb {
   position: absolute;
@@ -411,6 +419,7 @@ body::before {
   transform: translate(-50%, -50%);
   height: 100%;
   width: auto;
+  z-index: 1;
 }
 
 /* Instagram サムネイル（1:1 正方形） */
