@@ -516,6 +516,15 @@ async function fetchYouTubeTitle(url) {
 // ===== TikTok oEmbed（タイトル＋サムネURL）取得 =====
 
 async function fetchTikTokOembed(url) {
+  // noembed.com はCORSフレンドリーな中継サービス
+  try {
+    const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+    if (res.ok) {
+      const d = await res.json();
+      if (d.thumbnail_url) return { title: d.title || '', thumbnail_url: d.thumbnail_url };
+    }
+  } catch (e) {}
+  // fallback: TikTok直接
   try {
     const res = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`);
     if (res.ok) {
