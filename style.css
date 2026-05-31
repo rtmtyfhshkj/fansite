@@ -496,6 +496,19 @@ body::before {
   padding: 1rem 24px 1.5rem;
   position: relative;
 }
+.site-credit {
+  font-size: 11px;
+  color: var(--text-soft);
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+.site-credit a {
+  color: var(--text-soft);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.site-credit a:hover { color: var(--text); }
+
 .admin-toggle {
   background: none; border: none;
   font-size: 16px; cursor: pointer;
