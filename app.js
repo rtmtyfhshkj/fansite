@@ -143,6 +143,7 @@ function buildPostCard(post) {
         data-platform="${post.platform}"
         data-category="${post.category}"
         data-published-at="${post.published_at || ''}"
+        data-thumbnail-url="${escHtml(post.thumbnail_url || '')}"
         onclick="openEditModal(this)">Edit</button>
        <button class="btn-delete-post" onclick="deletePost(${post.id})">Delete</button>`
     : '';
@@ -474,6 +475,7 @@ function openEditModal(btn) {
   document.getElementById('editPlatform').value = btn.dataset.platform;
   document.getElementById('editCategory').value = btn.dataset.category;
   document.getElementById('editPublishedAt').value = btn.dataset.publishedAt;
+  document.getElementById('editThumbnailUrl').value = btn.dataset.thumbnailUrl || '';
   document.getElementById('editMsg').textContent = '';
   document.getElementById('editModal').classList.remove('hidden');
 }
@@ -483,17 +485,22 @@ function closeEditModal() {
 }
 
 async function submitEdit() {
-  const id          = document.getElementById('editPostId').value;
-  const title       = document.getElementById('editTitle').value.trim();
-  const platform    = document.getElementById('editPlatform').value;
-  const category    = document.getElementById('editCategory').value;
-  const publishedAt = document.getElementById('editPublishedAt').value || null;
-  const msg         = document.getElementById('editMsg');
+  const id           = document.getElementById('editPostId').value;
+  const title        = document.getElementById('editTitle').value.trim();
+  const platform     = document.getElementById('editPlatform').value;
+  const category     = document.getElementById('editCategory').value;
+  const publishedAt  = document.getElementById('editPublishedAt').value || null;
+  const thumbnailUrl = document.getElementById('editThumbnailUrl').value.trim() || null;
+  const msg          = document.getElementById('editMsg');
 
   msg.textContent = 'Saving...';
   msg.style.color = 'var(--text-soft)';
 
-  const { error } = await db.from('posts').update({ title, platform, category, published_at: publishedAt }).eq('id', id);
+  const { error } = await db.from('posts').update({
+    title, platform, category,
+    published_at: publishedAt,
+    thumbnail_url: thumbnailUrl
+  }).eq('id', id);
   if (error) {
     msg.textContent = `Failed: ${error.message}`;
     msg.style.color = '#ff8888';
