@@ -396,10 +396,19 @@ body::before {
   width: 100%; border: none; border-radius: 8px; display: block;
 }
 
-/* TikTok サムネイル */
+/* TikTok サムネイル（16:9 にトリミング） */
 .tiktok-thumb {
   width: 100%;
-  aspect-ratio: 9 / 16;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  border-radius: 10px;
+}
+
+/* Instagram サムネイル（1:1 正方形） */
+.insta-thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   display: block;
   border-radius: 10px;
