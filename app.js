@@ -81,7 +81,7 @@ function buildEmbed(post) {
   if (post.platform === 'instagram') {
     if (post.thumbnail_url) {
       return `<a class="embed-wrap yt-thumb-wrap" href="${escHtml(url)}" target="_blank" rel="noopener noreferrer">
-        <img class="yt-thumb" src="${escHtml(post.thumbnail_url)}" alt="">
+        <img class="yt-thumb" src="${escHtml(post.thumbnail_url)}" referrerpolicy="no-referrer" alt="">
         <div class="yt-play-btn" style="font-size:16px;">↗</div>
       </a>`;
     }
@@ -97,7 +97,7 @@ function buildEmbed(post) {
   if (post.platform === 'tiktok') {
     if (post.thumbnail_url) {
       return `<a class="embed-wrap yt-thumb-wrap" href="${escHtml(url)}" target="_blank" rel="noopener noreferrer">
-        <img class="tiktok-thumb" src="${escHtml(post.thumbnail_url)}" alt="">
+        <img class="tiktok-thumb" src="${escHtml(post.thumbnail_url)}" referrerpolicy="no-referrer" alt="">
         <div class="yt-play-btn">▶</div>
       </a>`;
     }
