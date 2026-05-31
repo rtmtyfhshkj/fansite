@@ -410,7 +410,7 @@ body::before {
   position: absolute;
   inset: -20px;
   background: var(--bg) center / cover no-repeat;
-  filter: blur(14px) brightness(0.45);
+  filter: brightness(0.45);
   z-index: 0;
 }
 .tiktok-thumb {
