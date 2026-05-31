@@ -398,19 +398,19 @@ body::before {
 
 /* TikTok サムネイル（16:9コンテナに縦長画像を中央配置） */
 .tiktok-thumb-container {
+  position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   background: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border-radius: 10px;
   overflow: hidden;
 }
 .tiktok-thumb {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
   height: 100%;
   width: auto;
-  display: block;
 }
 
 /* Instagram サムネイル（1:1 正方形） */
